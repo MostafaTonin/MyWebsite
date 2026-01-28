@@ -1,0 +1,21 @@
+# .NET
+**/bin/
+**/obj/
+**/Logs/
+*.user
+*.log
+
+# Node
+**/node_modules/
+**/dist/
+**/build/
+
+# Env files
+.env
+appsettings.Development.json
+
+# OS / IDE
+.vscode/
+.vs/
+.idea/
+.DS_Store

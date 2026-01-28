@@ -1,0 +1,427 @@
+{
+    "info": {
+        "name": "Portfolio API",
+        "description": "Complete API collection for Portfolio Backend",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "https://localhost:5001/api",
+            "type": "string"
+        },
+        {
+            "key": "token",
+            "value": "",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "Auth",
+            "item": [
+                {
+                    "name": "Login",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"Admin@123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/Auth/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "Auth",
+                                "login"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Skills",
+            "item": [
+                {
+                    "name": "Get All Skills",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/Skills",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "Skills"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Skill By ID",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/Skills/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "Skills",
+                                "1"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Create Skill",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"nameAr\": \"React\",\n  \"nameEn\": \"React\",\n  \"proficiency\": 85,\n  \"iconUrl\": \"/images/skills/react.png\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/Skills",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "Skills"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Skill",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"nameAr\": \"React Updated\",\n  \"nameEn\": \"React Updated\",\n  \"proficiency\": 90,\n  \"iconUrl\": \"/images/skills/react.png\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/Skills/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "Skills",
+                                "1"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Delete Skill",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/Skills/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "Skills",
+                                "1"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Projects",
+            "item": [
+                {
+                    "name": "Get All Projects",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/Projects",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "Projects"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Create Project",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"titleAr\": \"مشروع جديد\",\n  \"titleEn\": \"New Project\",\n  \"descriptionAr\": \"وصف المشروع\",\n  \"descriptionEn\": \"Project description\",\n  \"clientName\": \"Client ABC\",\n  \"technologyStack\": \"ASP.NET Core, React\",\n  \"projectUrl\": \"https://example.com\",\n  \"githubUrl\": \"https://github.com/user/repo\",\n  \"imageUrls\": [\"/uploads/projects/img1.jpg\"]\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/Projects",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "Projects"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Blog",
+            "item": [
+                {
+                    "name": "Get All Posts",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/Blog?page=1&pageSize=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "Blog"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "pageSize",
+                                    "value": "10"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Categories",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/Blog/categories",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "Blog",
+                                "categories"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Create Post",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"titleAr\": \"عنوان المقال\",\n  \"titleEn\": \"Article Title\",\n  \"contentAr\": \"محتوى المقال\",\n  \"contentEn\": \"Article content\",\n  \"imageUrl\": \"/uploads/blog/image.jpg\",\n  \"categoryId\": 1\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/Blog",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "Blog"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Services",
+            "item": [
+                {
+                    "name": "Get All Services",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/Services",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "Services"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "About",
+            "item": [
+                {
+                    "name": "Get All About Sections",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/About",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "About"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Contact",
+            "item": [
+                {
+                    "name": "Send Message",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"أحمد محمد\",\n  \"email\": \"ahmed@example.com\",\n  \"subject\": \"استفسار\",\n  \"message\": \"رسالة الاستفسار\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/Contact",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "Contact"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get All Messages (Admin)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/Contact",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "Contact"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Upload",
+            "item": [
+                {
+                    "name": "Upload Image",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "file",
+                                    "type": "file",
+                                    "src": ""
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/Upload/image?folder=projects",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "Upload",
+                                "image"
+                            ],
+                            "query": [
+                                {
+                                    "key": "folder",
+                                    "value": "projects"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}
