@@ -16,7 +16,7 @@ using System.Threading.RateLimiting;
 var builder = WebApplication.CreateBuilder(args);
 
 // =======================
-// 0️⃣ Serilog
+// Serilog
 // =======================
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
@@ -28,7 +28,7 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 
 // =======================
-// 1️⃣ Config & Secrets
+// Connection String
 // =======================
 var connectionString =
     Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
@@ -37,7 +37,9 @@ var connectionString =
 builder.Services.AddDbContext<PortfolioDbContext>(options =>
     options.UseSqlServer(connectionString));
 
+// =======================
 // JWT
+// =======================
 var jwtKey = Environment.GetEnvironmentVariable("Jwt__Key") ?? builder.Configuration["Jwt:Key"];
 var jwtIssuer = builder.Configuration["Jwt:Issuer"];
 var jwtAudience = builder.Configuration["Jwt:Audience"];
@@ -51,7 +53,7 @@ if (string.IsNullOrEmpty(jwtKey) || jwtKey.Length < 32)
 }
 
 // =======================
-// 2️⃣ Dependency Injection
+// DI
 // =======================
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -63,36 +65,33 @@ builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddAutoMapper(typeof(Program));
 
 // =======================
-// ❤️ Health Checks (Railway)
+// Health Checks (SAFE)
 // =======================
 builder.Services.AddHealthChecks()
-    .AddSqlServer<PortfolioDbContext>(
-        connectionString,
-        name: "db",
-        timeout: TimeSpan.FromSeconds(5));
+    .AddDbContextCheck<PortfolioDbContext>("db");
 
 // =======================
-// 3️⃣ Rate Limiting
+// Rate Limiting
 // =======================
 builder.Services.AddRateLimiter(options =>
 {
-    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: context.User.Identity?.Name
-                ?? context.Request.Headers.Host.ToString(),
+            partitionKey: httpContext.User.Identity?.Name
+                ?? httpContext.Request.Headers.Host.ToString(),
             factory: _ => new FixedWindowRateLimiterOptions
             {
+                AutoReplenishment = true,
                 PermitLimit = 100,
-                Window = TimeSpan.FromMinutes(1),
                 QueueLimit = 0,
-                AutoReplenishment = true
+                Window = TimeSpan.FromMinutes(1)
             }));
 
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
 
 // =======================
-// 4️⃣ CORS
+// CORS
 // =======================
 var corsPolicyName = "FrontendPolicy";
 
@@ -108,7 +107,7 @@ builder.Services.AddCors(options =>
 });
 
 // =======================
-// 5️⃣ Authentication
+// Auth
 // =======================
 builder.Services.AddAuthentication(options =>
 {
@@ -125,8 +124,8 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = jwtIssuer,
         ValidAudience = jwtAudience,
-        IssuerSigningKey =
-            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(jwtKey)),
         ClockSkew = TimeSpan.Zero
     };
 });
@@ -136,7 +135,7 @@ builder.Services.AddControllers();
 builder.Services.AddResponseCaching();
 
 // =======================
-// 6️⃣ Swagger
+// Swagger
 // =======================
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -151,8 +150,7 @@ builder.Services.AddSwaggerGen(options =>
             Type = SecuritySchemeType.Http,
             Scheme = "Bearer",
             BearerFormat = "JWT",
-            In = ParameterLocation.Header,
-            Description = "Enter JWT Token"
+            In = ParameterLocation.Header
         });
 
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -160,31 +158,21 @@ builder.Services.AddSwaggerGen(options =>
         {
             new OpenApiSecurityScheme
             {
-                Reference =
-                    new OpenApiReference
-                    {
-                        Type = ReferenceType.SecurityScheme,
-                        Id = "Bearer"
-                    }
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
             },
             Array.Empty<string>()
         }
     });
 });
 
-// =======================
-// Logging
-// =======================
-builder.Services.AddLogging(logging =>
-{
-    logging.AddConsole();
-    logging.AddDebug();
-});
-
 var app = builder.Build();
 
 // =======================
-// 7️⃣ DB Migration + Seed
+// Migrate DB
 // =======================
 using (var scope = app.Services.CreateScope())
 {
@@ -204,7 +192,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 // =======================
-// Pipeline
+// Middleware
 // =======================
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
@@ -212,9 +200,7 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 if (!app.Environment.IsProduction())
-{
     app.UseHttpsRedirection();
-}
 
 app.UseStaticFiles();
 
@@ -231,13 +217,13 @@ app.MapControllers();
 // Health Endpoints
 // =======================
 
-// Liveness — Railway ping
+// Railway ping (no DB)
 app.MapHealthChecks("/health", new HealthCheckOptions
 {
     Predicate = _ => false
 });
 
-// DB readiness
+// DB check
 app.MapHealthChecks("/health/db", new HealthCheckOptions
 {
     Predicate = hc => hc.Name == "db"
