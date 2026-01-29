@@ -62,10 +62,7 @@ builder.Services.AddAutoMapper(typeof(Program));
 
 // 🔥 HEALTH CHECKS — Railway safe
 builder.Services.AddHealthChecks()
-    .AddSqlServer(
-        connectionString,
-        name: "db",
-        timeout: TimeSpan.FromSeconds(5));
+    .AddSqlServer(connectionString);
 
 
 // 3️⃣ Rate Limiting
@@ -209,18 +206,17 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// ✅ Railway ping endpoint (NO DB)
+// ✅ Liveness (Railway ping — no DB)
 app.MapHealthChecks("/health", new HealthCheckOptions
 {
     Predicate = _ => false
 });
 
-// ✅ DB health
-app.MapHealthChecks("/health");
-app.MapHealthChecks("/health/db", new HealthCheckOptions
-{
-    Predicate = hc => hc.Name == "db"
-});
+// ✅ DB readiness
+app.MapHealthChecks("/health/db");
+
+
+
 
 
 app.Run();
