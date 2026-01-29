@@ -168,25 +168,25 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-app.UseMiddleware<GlobalExceptionMiddleware>(); // Enabled
+app.UseMiddleware<GlobalExceptionMiddleware>();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
-app.UseStaticFiles(); 
+app.UseStaticFiles();
 
-app.UseCors(corsPolicyName); // Use named policy
+app.UseCors(corsPolicyName);
 app.UseResponseCaching();
-app.UseRateLimiter(); // Use Rate Limiter
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 app.MapHealthChecks("/health");
+
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+app.Urls.Add($"http://0.0.0.0:{port}");
 
 app.Run();
