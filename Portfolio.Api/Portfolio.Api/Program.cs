@@ -62,7 +62,11 @@ builder.Services.AddAutoMapper(typeof(Program));
 
 // 🔥 HEALTH CHECKS — Railway safe
 builder.Services.AddHealthChecks()
-    .AddDbContextCheck<PortfolioDbContext>("db");
+    .AddSqlServer(
+        connectionString,
+        name: "db",
+        timeout: TimeSpan.FromSeconds(5));
+
 
 // 3️⃣ Rate Limiting
 builder.Services.AddRateLimiter(options =>
@@ -212,6 +216,11 @@ app.MapHealthChecks("/health", new HealthCheckOptions
 });
 
 // ✅ DB health
-app.MapHealthChecks("/health/db");
+app.MapHealthChecks("/health");
+app.MapHealthChecks("/health/db", new HealthCheckOptions
+{
+    Predicate = hc => hc.Name == "db"
+});
+
 
 app.Run();
