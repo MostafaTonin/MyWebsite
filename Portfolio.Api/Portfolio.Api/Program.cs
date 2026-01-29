@@ -7,6 +7,7 @@ using Microsoft.OpenApi.Models;
 using Portfolio.Api.Data;
 using Portfolio.Api.Interfaces;
 using Portfolio.Api.Middleware;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 using Portfolio.Api.Repositories;
 using Portfolio.Api.Services;
 using Serilog;
@@ -35,7 +36,7 @@ var connectionString =
     ?? builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<PortfolioDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseNpgsql(connectionString));
 
 // =======================
 // JWT
@@ -174,22 +175,22 @@ var app = builder.Build();
 // =======================
 // Migrate DB
 // =======================
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-
-    try
-    {
-        var context = services.GetRequiredService<PortfolioDbContext>();
-        await context.Database.MigrateAsync();
-        await DbSeeder.SeedAsync(context);
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Database Migration Failed");
-    }
-}
+// using (var scope = app.Services.CreateScope())
+// {
+//     var services = scope.ServiceProvider;
+//
+//     try
+//     {
+//         var context = services.GetRequiredService<PortfolioDbContext>();
+//         await context.Database.MigrateAsync();
+//         await DbSeeder.SeedAsync(context);
+//     }
+//     catch (Exception ex)
+//     {
+//         var logger = services.GetRequiredService<ILogger<Program>>();
+//         logger.LogError(ex, "Database Migration Failed");
+//     }
+// }
 
 // =======================
 // Middleware
