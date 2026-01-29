@@ -32,7 +32,8 @@ builder.Host.UseSerilog();
 // Connection String
 // =======================
 var connectionString =
-    Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
+    Environment.GetEnvironmentVariable("DATABASE_URL")
+    ?? Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
     ?? builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<PortfolioDbContext>(options =>
