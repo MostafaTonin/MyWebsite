@@ -15,7 +15,9 @@ using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 0️⃣ Serilog Configuration
+// =======================
+// 0️⃣ Serilog
+// =======================
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .Enrich.FromLogContext()
@@ -25,7 +27,9 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
-// 1️⃣ Secrets & Configuration
+// =======================
+// 1️⃣ Config & Secrets
+// =======================
 var connectionString =
     Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
     ?? builder.Configuration.GetConnectionString("DefaultConnection");
@@ -41,16 +45,14 @@ var jwtAudience = builder.Configuration["Jwt:Audience"];
 if (string.IsNullOrEmpty(jwtKey) || jwtKey.Length < 32)
 {
     if (builder.Environment.IsDevelopment())
-    {
         jwtKey = "ThisIsAFallbackSecretKeyForDevelopmentOnly123!";
-    }
     else
-    {
         throw new InvalidOperationException("JWT Key is missing or too weak for production.");
-    }
 }
 
+// =======================
 // 2️⃣ Dependency Injection
+// =======================
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IBlogService, BlogService>();
@@ -60,30 +62,38 @@ builder.Services.AddScoped<IFileService, FileService>();
 
 builder.Services.AddAutoMapper(typeof(Program));
 
-// 🔥 HEALTH CHECKS — Railway safe
+// =======================
+// ❤️ Health Checks (Railway)
+// =======================
 builder.Services.AddHealthChecks()
-    .AddSqlServer(connectionString);
+    .AddSqlServer<PortfolioDbContext>(
+        connectionString,
+        name: "db",
+        timeout: TimeSpan.FromSeconds(5));
 
-
+// =======================
 // 3️⃣ Rate Limiting
+// =======================
 builder.Services.AddRateLimiter(options =>
 {
-    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
         RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: httpContext.User.Identity?.Name
-                           ?? httpContext.Request.Headers.Host.ToString(),
+            partitionKey: context.User.Identity?.Name
+                ?? context.Request.Headers.Host.ToString(),
             factory: _ => new FixedWindowRateLimiterOptions
             {
-                AutoReplenishment = true,
                 PermitLimit = 100,
+                Window = TimeSpan.FromMinutes(1),
                 QueueLimit = 0,
-                Window = TimeSpan.FromMinutes(1)
+                AutoReplenishment = true
             }));
 
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
 
+// =======================
 // 4️⃣ CORS
+// =======================
 var corsPolicyName = "FrontendPolicy";
 
 builder.Services.AddCors(options =>
@@ -97,7 +107,9 @@ builder.Services.AddCors(options =>
     });
 });
 
+// =======================
 // 5️⃣ Authentication
+// =======================
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -123,7 +135,9 @@ builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddResponseCaching();
 
-// 6️⃣ Swagger (Production enabled)
+// =======================
+// 6️⃣ Swagger
+// =======================
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -158,6 +172,9 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+// =======================
+// Logging
+// =======================
 builder.Services.AddLogging(logging =>
 {
     logging.AddConsole();
@@ -166,7 +183,9 @@ builder.Services.AddLogging(logging =>
 
 var app = builder.Build();
 
+// =======================
 // 7️⃣ DB Migration + Seed
+// =======================
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -184,9 +203,11 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+// =======================
+// Pipeline
+// =======================
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
-// Swagger always ON
 app.UseSwagger();
 app.UseSwaggerUI();
 
@@ -206,17 +227,20 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// ✅ Liveness (Railway ping — no DB)
+// =======================
+// Health Endpoints
+// =======================
+
+// Liveness — Railway ping
 app.MapHealthChecks("/health", new HealthCheckOptions
 {
     Predicate = _ => false
 });
 
-// ✅ DB readiness
-app.MapHealthChecks("/health/db");
-
-
-
-
+// DB readiness
+app.MapHealthChecks("/health/db", new HealthCheckOptions
+{
+    Predicate = hc => hc.Name == "db"
+});
 
 app.Run();
